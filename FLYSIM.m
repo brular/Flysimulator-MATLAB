@@ -35,7 +35,8 @@ function FLYSIM
     s1 = []; % Surface 1
     s2 = []; % Surface 2
     s3 = []; % Surface 3
-    pe = 0;  % Engine Sound  
+    pe = 0;  % Engine Sound
+    cases = 0;
     fig = figure;
     hold on;
     fig.Position = [100 100 700 600]; % Size of program
@@ -93,11 +94,13 @@ function FLYSIM
     %%
     function [fTC]= TestCrash()
         z = pos(3)-20;
-        if  z < 0  || z < GetZ(s1, pos) || z < GetZ(s2,pos)
-             Crash();
+        if  z < 0  || z < GetZ(s1, pos) || z < GetZ(s2,pos) || z < GetZ(s3,pos)
+         
+            Crash();
              fTC= true;
         else   
              fTC=false;
+        
         end
     end
     %% Add some Islands
@@ -160,7 +163,7 @@ function FLYSIM
         if (kwt < 0)
             EngineStop();
         else
-            kwt = kwt - 0.003 - vel*vel/10000000;
+            kwt = kwt - 0.003 - vel*vel/100000000;
         end 
     end
     %% Show Flight Info
@@ -214,20 +217,20 @@ function FLYSIM
 
     %% Endre Scene
     function endreScene()
-    switch sufFlat.CData
-        case reshape(textureCity,[],3)
+        switch (cases)
+        case 1 
             sufFlat.CData = textureSea;
             s1.CData = textureForrest;
             s2.CData = textureDesert;
             s3.CData = textureForrest;
 
-        case reshape(textureSea,[],3)
+        case 2 
             sufFlat.CData = textureDesert;
             s1.CData = textureDesert;
             s2.CData = textureDesert;
             s3.CData = textureDesert;
 
-        case reshape(textureDesert,[],3)
+        case 3
             sufFlat.CData = textureIce;
             s1.CData = textureIce;
             s2.CData = textureIce;
@@ -238,7 +241,7 @@ function FLYSIM
             s1.CData = textureForrest;
             s2.CData = textureDesert;
             s3.CData = textureForrest;
-    end
+        end
     end
 
     %% Add the sky as a giant sphere (fly inside...)
@@ -288,6 +291,7 @@ function FLYSIM
              matRot = MR(0, 0, 0.05);
          elseif (key=='b') %endreScene
              endreScene();
+             cases = mod(cases,3) + 1;
          end           
     end
     %% Trap Key Release
