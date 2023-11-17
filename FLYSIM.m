@@ -6,19 +6,21 @@ function FLYSIM
     close all
     
     %% Init Stuff - may be changed
-    FRAMES=  30; % 2->
-    SURFACES = 50; % 4 ->
+    FRAMES=  60; % 2->
+    SURFACES = 150; % 4 ->
     firstPerson = true; % Do we start in 1st person view, or not?
     vel = 800;            % Velocity
     kwt     = 256;        % Battery Level
-    posStart =[-25000,0,500];  % Start position
+    posStart =[-25000,0,5000];  % Start position
     forwardVec = [1 0 0]';    % Initial direction of the plane
-    colorP = 'blue';         % Color of plane
+    colorP = 'red';         % Color of plane
     scaleP = 1.3;            % Scale plane 
     
     textureDesert = imread('desert.jpg');
     textureSea = imread('sea.jpg');
     textureForrest = imread('forrest.jpg');
+    textureCity = imread('NewYork.jpg');
+    textureIce = imread('ice.jpg');
         
     %% Other variables
     matRot   = eye(3);
@@ -29,8 +31,10 @@ function FLYSIM
     txt2 = 0;        % Control height
     pos = posStart;
     rot = matRot;
+    sufFlat = [];
     s1 = []; % Surface 1
     s2 = []; % Surface 2
+    s3 = []; % Surface 3
     pe = 0;  % Engine Sound  
     fig = figure;
     hold on;
@@ -46,7 +50,7 @@ function FLYSIM
     AddSky();
     AddSurface();
     AddIslands();
-   
+
     %% Set keyboard callbacks and flags for movement.
     set(fig,'WindowKeyPressFcn',@KeyPress,'WindowKeyReleaseFcn', @KeyRelease);
     hold off
@@ -105,7 +109,8 @@ function FLYSIM
         s1=surf(x,y,z, ...
                'LineStyle','none','AmbientStrength',0.7);
         s1.FaceColor = 'texturemap';
-        s1.CData = textureDesert;    
+        s1.CData = textureDesert;  
+        
         
         %% Define a forrest island
         x = -2:2/sqrt(SURFACES):2;
@@ -120,6 +125,22 @@ function FLYSIM
                      'AmbientStrength',0.7,'SpecularColorReflectance',1);
         s2.FaceColor = 'texturemap';
         s2.CData = textureForrest;
+
+        %% Define a frozen island
+        x = -2:2/sqrt(SURFACES):2;
+        y = -5:2/sqrt(SURFACES):5;
+        [X,Y] = meshgrid(x,y);
+        Z = X.*(exp(-X.^2-Y.^2)+exp(-X.^2-(Y-2).^2));
+        X = X * 1000;
+        Y = Y * 1000;
+        Z = Z * 10000;
+        s3 = surf(X,Y,Z, 'LineStyle', 'none', ...
+            'SpecularStrength',0, ...
+                     'AmbientStrength',0.7);
+        s3.FaceColor = 'texturemap';
+        s3.CData = textureIce;
+
+
     end
     %% Update Camera positions and rotation
     function UpdateCamera()
@@ -171,6 +192,8 @@ function FLYSIM
         h(end+1)  = txt2;
         set(h, 'FontSize', 14);
         set(h, 'BackgroundColor', 'green');
+
+       
     end
 
     %% Initialize the plane
@@ -186,7 +209,38 @@ function FLYSIM
         % rotate(p1, [1 0 0 ], 180);
         p1.Vertices = p1.Vertices .* scaleP;
         vert = p1.Vertices;
+
     end
+
+    %% Endre Scene
+    function endreScene()
+    switch sufFlat.CData
+        case reshape(textureCity,[],3)
+            sufFlat.CData = textureSea;
+            s1.CData = textureForrest;
+            s2.CData = textureDesert;
+            s3.CData = textureForrest;
+
+        case reshape(textureSea,[],3)
+            sufFlat.CData = textureDesert;
+            s1.CData = textureDesert;
+            s2.CData = textureDesert;
+            s3.CData = textureDesert;
+
+        case reshape(textureDesert,[],3)
+            sufFlat.CData = textureIce;
+            s1.CData = textureIce;
+            s2.CData = textureIce;
+            s3.CData = textureIce;
+
+        otherwise
+            sufFlat.CData = textureCity;
+            s1.CData = textureForrest;
+            s2.CData = textureDesert;
+            s3.CData = textureForrest;
+    end
+    end
+
     %% Add the sky as a giant sphere (fly inside...)
     function AddSky
         [skyX,skyY,skyZ] = sphere(SURFACES);
@@ -194,17 +248,22 @@ function FLYSIM
         sky.FaceColor = 'cyan';
         light('Position',[-5000 0 0],'Style','local')
     end
-    %% add flat ground (Ocean) going off to (basically) infinity.
+    %% add flat ground (City) going off to (basically) infinity.
     function AddSurface
         k = 100000 / SURFACES;
-        [x,y] = meshgrid(-500000:k:500000);
+        [x,y] = meshgrid(-100000:k:50000);
         z = x .* 0;
         sufFlat = surf(x,y,z);
         sufFlat.FaceColor = 'texturemap';
+        sufFlat.CData = textureCity;
         sufFlat.CData = textureSea;
+        sufFlat.CData = textureForrest;
+        sufFlat.CData = textureIce;
+        sufFlat.CData = textureDesert;
         sufFlat.AlphaData = 0.1;
         camlight('headlight');
         camva(40); %view angle
+    
     end
     %% Trap press Key
     function KeyPress(varargin)
@@ -224,14 +283,17 @@ function FLYSIM
          elseif (key=='s')
              matRot = MR(0, -0.05,0);
          elseif (key=='a')
-             matRot = MR(0, 0, 0.05);
-         elseif (key=='d')
              matRot = MR(0, 0, -0.05);
+         elseif (key=='d')
+             matRot = MR(0, 0, 0.05);
+         elseif (key=='b') %endreScene
+             endreScene();
          end           
     end
     %% Trap Key Release
     function KeyRelease(varargin)
          matRot = eye(3); % Unit Matrix
+         
     end
     %% Rotation Matrix
     function M = MR(yaw,pitch,roll)
@@ -243,7 +305,7 @@ function FLYSIM
     end
     %% Make Engine Sound
     function EngineSound()
-        [es,fs] = audioread('engine.wav');
+        [es,fs] = audioread('engine2.wav');
         pe = audioplayer(es,fs);
         if isplaying(pe)
             stop(pe);        
@@ -256,7 +318,7 @@ function FLYSIM
     end    
     %% Crash Sound
     function Crash()
-        [xs,f] = audioread('crash_sound.wav');
+        [xs,f] = audioread('crash_sound2.wav');
         pe = audioplayer(xs,f);
         play(pe);  
         p1.FaceColor = "Black";       
