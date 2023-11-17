@@ -21,6 +21,7 @@ function FLYSIM
     textureForrest = imread('forrest.jpg');
     textureCity = imread('NewYork.jpg');
     textureIce = imread('ice.jpg');
+    textureFace = imread('planeimg.jpg');
         
     %% Other variables
     matRot   = eye(3);
@@ -220,9 +221,9 @@ function FLYSIM
         switch (cases)
         case 1 
             sufFlat.CData = textureSea;
-            s1.CData = textureForrest;
+            s1.CData = textureFace;
             s2.CData = textureDesert;
-            s3.CData = textureForrest;
+            s3.CData = textureIce;
 
         case 2 
             sufFlat.CData = textureDesert;

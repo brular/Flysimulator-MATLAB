@@ -21,6 +21,7 @@ function FLYSIM
     textureForrest = imread('forrest.jpg');
     textureCity = imread('NewYork.jpg');
     textureIce = imread('ice.jpg');
+    textureFace = imread('planeimg.jpg');
         
     %% Other variables
     matRot   = eye(3);
@@ -217,12 +218,12 @@ function FLYSIM
 
     %% Endre Scene
     function endreScene()
-    switch (sufFlat.CData)
+        switch (cases)
         case 1 
             sufFlat.CData = textureSea;
-            s1.CData = textureForrest;
+            s1.CData = textureFace;
             s2.CData = textureDesert;
-            s3.CData = textureForrest;
+            s3.CData = textureIce;
 
         case 2 
             sufFlat.CData = textureDesert;
@@ -241,7 +242,7 @@ function FLYSIM
             s1.CData = textureForrest;
             s2.CData = textureDesert;
             s3.CData = textureForrest;
-    end
+        end
     end
 
     %% Add the sky as a giant sphere (fly inside...)
@@ -290,8 +291,8 @@ function FLYSIM
          elseif (key=='d')
              matRot = MR(0, 0, 0.05);
          elseif (key=='b') %endreScene
-             cases = mod(cases,3) + 1
              endreScene();
+             cases = mod(cases,3) + 1;
          end           
     end
     %% Trap Key Release
